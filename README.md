@@ -1,5 +1,3 @@
-# user-api
-Servicio para exponer un API para la creación de usuarios.
 # UserApi
 ## _Este proyecto contiene un api de creacion de usuarios escrito en Java usando el framework de Spring Boot._
 

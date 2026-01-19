@@ -102,7 +102,7 @@ public class UserControllerMockMvcTest {
     @Test
     @WithMockUser(username = "tester")
     void createUser_whenEmailDoesNotMatchRegex_shouldReturn400_andMessage() throws Exception {
-        // No cumple tu regex: falta mayúscula (tu regex pide al menos una)
+        // No cumple tu regex: falta .com (tu regex pide un correo valido)
         UserDto req = buildUser("badpass_" + System.currentTimeMillis() + "@gmail", "Abcdefg1");
 
         mockMvc.perform(post("/users")

@@ -1,12 +1,13 @@
 package dev.luchonetvv.userapi.service;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,21 +22,29 @@ import dev.luchonetvv.userapi.security.JwtProvider;
 @Service
 public class UserServiceImpl implements UserServiceInt {
 
-    private UserRepository userRepository;
-    private RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
-    private JwtProvider jwtProvider;
-    private PasswordEncoder passwordEncoder;
-    private AuthenticationManager authenticationManager;
+    private final JwtProvider jwtProvider;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+
+    private final Pattern emailPattern;
+    private final Pattern passwordPattern;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
-        JwtProvider jwtProvider, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, JwtProvider jwtProvider,
+                           PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager,
+                           @Value("${app.regex.email}") String emailRegex,
+                           @Value("${app.regex.password}") String passwordRegex
+    ) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.jwtProvider = jwtProvider;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
+        this.emailPattern = Pattern.compile(emailRegex);
+        this.passwordPattern = Pattern.compile(passwordRegex);
     }
 
     @Override
@@ -44,36 +53,53 @@ public class UserServiceImpl implements UserServiceInt {
     }
 
     @Override
-    public Optional<String> signin(String email, String password) {
-        Optional<String> token = Optional.empty();
+    public String signin(String email, String password) {
+        validateEmailAndPassword(email, password);
+
+        String token;
         Optional<UserEntity> user = userRepository.findByEmail(email);
         
         if (user.isPresent()) {
-            try {
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-                token = Optional.of(jwtProvider.createToken(email, user.get().getRoles()));
-            } catch (AuthenticationException e){
-                e.printStackTrace();
-            }
+                token = Optional.of(jwtProvider.createToken(email, user.get().getRoles()))
+                        .orElseThrow(() -> new ValidateUserException("Credenciales inválidas"));
+        } else {
+            throw new ValidateUserException("Usuario o contraseña incorrectos");
         }
         return token;
     }
 
     @Override
     public Optional<UserEntity> createUser(UserDto userDto) {
+        validateEmailAndPassword(userDto.getEmail(), userDto.getPassword());
+
         Optional<UserEntity> user = userRepository.findByEmail(userDto.getEmail());
-        Optional<UserEntity> userSave = Optional.empty();
+        Optional<UserEntity> userSave;
 
         if (user.isPresent()) {
-            throw new ValidateUserException(String.format("El correo %s ya fue registrado.", userDto.getEmail()));
+            throw new ValidateUserException("El correo ya registrado");
         } else {
             Optional<RoleEntity> rol = roleRepository.findByRoleName("ROLE_ADMIN");
-            final String token = Optional.of(jwtProvider.createToken(userDto.getEmail(), Arrays.asList(rol.get()))).get();
-            
-            userSave = Optional.of(userRepository.save(UserDto.toUserEntity(userDto, passwordEncoder.encode(userDto.getPassword()), token, rol.get())));
+
+            if (rol.isPresent()) {
+                final String token = Optional.of(jwtProvider.createToken(userDto.getEmail(), Collections.singletonList(rol.get()))).get();
+
+                userSave = Optional.of(userRepository.save(UserDto.toUserEntity(userDto, passwordEncoder.encode(userDto.getPassword()), token, rol.get())));
+            } else {
+                throw new ValidateUserException("Error al crear el usuario");
+            }
         }
         
         return userSave;
+    }
+
+    private void validateEmailAndPassword(String email, String password) {
+        if (!emailPattern.matcher(email).matches()) {
+            throw new ValidateUserException("Ingresar un email válido.");
+        }
+        if (!passwordPattern.matcher(password).matches()) {
+            throw new ValidateUserException("Ingresar una contraseña válida.");
+        }
     }
     
 }

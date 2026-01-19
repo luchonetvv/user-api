@@ -1,33 +1,41 @@
 package dev.luchonetvv.userapi.domain.dto;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import org.springframework.lang.NonNull;
-
 import dev.luchonetvv.userapi.domain.entities.PhoneEntity;
 import dev.luchonetvv.userapi.domain.entities.RoleEntity;
 import dev.luchonetvv.userapi.domain.entities.UserEntity;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @JsonInclude(Include.NON_NULL)
 public class UserDto {
     private UUID id;
+    @Schema(example = "Test User")
     private String name;
-    @NonNull
-    @Email(regexp = "^[^@]+@[^@]+\\.[a-zA-Z]{2,}$", message = "Ingresar un email valido.")
+    @Schema(example = "test@gmail.com", description = "Debe cumplir regex configurable app.regex.email")
+    @Email(message = "Ingresar un email válido.")
     private String email;
-    @NonNull
+    @Schema(
+            accessMode = Schema.AccessMode.WRITE_ONLY,
+            example = "Abcdefg1",
+            description = "Debe cumplir regex configurable app.regex.password"
+    )
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Pattern(
+            regexp = "^(?=.*[A-Z])(?=.*\\d).{8,}$",
+            message = "Ingresar una contraseña válida."
+    )
     private String password;
     private List<PhoneDto> phones;
     private LocalDateTime lastLogin;
@@ -162,7 +170,7 @@ public class UserDto {
         userEntity.setToken(token);
         userEntity.setActive(true);
         userEntity.setCreated(created);
-        userEntity.setRoles(Arrays.asList(userRole));
+        userEntity.setRoles(Collections.singletonList(userRole));
 
         List<PhoneEntity> listPhone = new ArrayList<>();
         userDto.getPhones().forEach(phone -> {
@@ -187,7 +195,6 @@ public class UserDto {
         userDto.setId(user.getId());
         userDto.setName(user.getName());
         userDto.setEmail(user.getEmail());
-        userDto.setPassword(user.getPassword());
         userDto.setPhones(
             user.getPhones().stream()
                 .map(phone -> new PhoneDto(phone.getNumber(), phone.getCityCode(), phone.getCountryCode()))

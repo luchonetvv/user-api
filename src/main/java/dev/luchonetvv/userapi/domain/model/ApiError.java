@@ -1,8 +1,8 @@
 package dev.luchonetvv.userapi.domain.model;
 
 public class ApiError {
-    String message;
-    String causeMessage;
+    private String message;
+    private String causeMessage;
 
     public String getMessage() {
         return message;

@@ -14,9 +14,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UserDetailsServiceImpl implements UserDetailsServiceInt {
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    private JwtProvider jwtProvider;
+    private final JwtProvider jwtProvider;
 
     @Autowired
     public UserDetailsServiceImpl(UserRepository userRepository, JwtProvider jwtProvider) {
@@ -30,10 +30,7 @@ public class UserDetailsServiceImpl implements UserDetailsServiceInt {
         try {
             user = userRepository.findByEmail(email).orElseThrow(() ->
                     new Exception(String.format("Usuario con email %s no existe", email)));
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        } catch (Exception ignored) { }
 
         return withUsername(user.getEmail())
             .password(user.getPassword())

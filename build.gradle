@@ -7,11 +7,14 @@ plugins {
 group = 'dev.luchonetvv.userapi'
 version = '0.0.1-SNAPSHOT'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 repositories {
 	mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
 }
 
 dependencies {
@@ -23,14 +26,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    implementation "org.springdoc:springdoc-openapi-ui:1.6.15"
+
 	runtimeOnly 'com.h2database:h2'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
-	testCompileOnly 'junit:junit:4.12'
-	testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.3.1'
 }
 
 test {
 	useJUnitPlatform()
+    systemProperty "spring.profiles.active", "test"
 }

@@ -1,8 +1,14 @@
 package dev.luchonetvv.userapi.domain.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(name = "Phone", description = "Teléfono asociado al usuario")
 public class PhoneDto {
+    @Schema(example = "88990765", description = "Número de teléfono")
     private String number;
+    @Schema(example = "MNG", description = "Código de ciudad (3 caracteres)")
     private String cityCode;
+    @Schema(example = "NIC", description = "Código de país (3 caracteres)")
     private String countryCode;
 
     public PhoneDto() { }

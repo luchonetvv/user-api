@@ -1,7 +1,12 @@
 package dev.luchonetvv.userapi.domain.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(name = "Role", description = "Rol asignado al usuario")
 public class RolDto {
+    @Schema(example = "ROLE_ADMIN", description = "Nombre del rol")
     private String roleName;
+    @Schema(example = "Administrator", description = "Descripción del rol")
     private String description;
 
     public RolDto() { }

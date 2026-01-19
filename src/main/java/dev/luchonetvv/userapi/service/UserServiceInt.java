@@ -8,7 +8,7 @@ import dev.luchonetvv.userapi.domain.entities.UserEntity;
 public interface UserServiceInt {
     Iterable<UserEntity> getAll();
 
-    Optional<String> signin(String email, String password);
+    String signin(String email, String password);
 
     Optional<UserEntity> createUser(UserDto user);
 }

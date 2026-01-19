@@ -15,7 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
-    private UserDetailsServiceInt userDetailsServiceInt;
+    private final UserDetailsServiceInt userDetailsServiceInt;
 
     @Autowired
     public SecurityConfiguration(UserDetailsServiceInt userDetailsServiceInt) {
@@ -26,7 +26,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 .antMatchers("/users/signin").permitAll()
+                .antMatchers("/users").permitAll()
                 .antMatchers("/h2-console/**").permitAll()
+                .antMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated();
 
         // Disable CSRF (cross site request forgery)

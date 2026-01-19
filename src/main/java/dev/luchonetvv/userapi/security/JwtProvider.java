@@ -24,8 +24,8 @@ import io.jsonwebtoken.security.*;
 public class JwtProvider {
     private final String ROLES_KEY = "roles";
 
-    private String secretKey;
-    private long validityInMilliseconds;
+    private final String secretKey;
+    private final long validityInMilliseconds;
 
     @Autowired
     public JwtProvider(@Value("${security.jwt.token.secret-key}") String secretKey,

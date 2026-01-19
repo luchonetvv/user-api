@@ -14,9 +14,9 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.web.filter.GenericFilterBean;
 
 public class JwtTokenFilter extends GenericFilterBean {
-    private static final String BEARER = "Bearer";
+    private static final String BEARER_PREFIX = "Bearer ";
 
-    private UserDetailsServiceInt userDetailsServiceInt;
+    private final UserDetailsServiceInt userDetailsServiceInt;
 
     public JwtTokenFilter(UserDetailsServiceInt userDetailsServiceInt) {
         this.userDetailsServiceInt = userDetailsServiceInt;
@@ -26,13 +26,11 @@ public class JwtTokenFilter extends GenericFilterBean {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
         String headerValue = ((HttpServletRequest) request).getHeader("Authorization");
-        getBearerToken(headerValue).ifPresent(token-> {
-            //Pull the Username and Roles from the JWT to construct the user details
-            userDetailsServiceInt.loadUserByJwtToken(token).ifPresent(userDetails -> {
-                //Add the user details (Permissions) to the Context for just this API invocation
-                SecurityContextHolder.getContext().setAuthentication(
-                        new PreAuthenticatedAuthenticationToken(userDetails, "", userDetails.getAuthorities()));
-            });
+        //Pull the Username and Roles from the JWT to construct the user details
+        getBearerToken(headerValue).flatMap(userDetailsServiceInt::loadUserByJwtToken).ifPresent(userDetails -> {
+            //Add the user details (Permissions) to the Context for just this API invocation
+            SecurityContextHolder.getContext().setAuthentication(
+                    new PreAuthenticatedAuthenticationToken(userDetails, "", userDetails.getAuthorities()));
         });
 
         //move on to the next filter in the chains
@@ -40,8 +38,10 @@ public class JwtTokenFilter extends GenericFilterBean {
     }
 
     private Optional<String> getBearerToken(String headerVal) {
-        if (headerVal != null && headerVal.startsWith(BEARER)) {
-            return Optional.of(headerVal.replace(BEARER, "").trim());
+        if (headerVal == null) return Optional.empty();
+
+        if (headerVal.regionMatches(true, 0, BEARER_PREFIX, 0, BEARER_PREFIX.length())) {
+            return Optional.of(headerVal.substring(BEARER_PREFIX.length()).trim());
         }
         return Optional.empty();
     }
